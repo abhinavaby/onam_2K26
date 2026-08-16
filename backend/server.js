@@ -17,6 +17,23 @@ app.use(express.urlencoded({ extended: true }));
 // Routes
 app.use('/api/photos', photoRoutes);
 
+// Serve static frontend files in production if available
+const frontendDistPath = path.join(__dirname, '../frontend/dist');
+app.use(express.static(frontendDistPath));
+
+// Fallback to index.html for SPA client-side routing on refresh
+app.get('*', (req, res, next) => {
+  if (req.path.startsWith('/api')) {
+    return next();
+  }
+  const indexPath = path.join(frontendDistPath, 'index.html');
+  res.sendFile(indexPath, (err) => {
+    if (err) {
+      next();
+    }
+  });
+});
+
 // Global Error Handler
 app.use((err, req, res, next) => {
   console.error(err.stack);
@@ -29,3 +46,4 @@ app.use((err, req, res, next) => {
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
+
