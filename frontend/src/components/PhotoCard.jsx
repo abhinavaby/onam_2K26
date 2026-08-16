@@ -11,21 +11,28 @@ const PhotoCard = ({ photo, onClick, adminMode, onDelete }) => {
       transition={{ duration: 0.4 }}
       className="group relative bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-stone-100 flex flex-col h-full"
     >
-      <div className="relative aspect-square sm:aspect-[4/3] overflow-hidden bg-stone-100">
+      <div 
+        className="relative aspect-square sm:aspect-[4/3] overflow-hidden bg-stone-100 cursor-pointer"
+        onClick={() => onClick(photo)}
+      >
         <img 
           src={photo.publicUrl} 
           alt={photo.name} 
           loading="lazy"
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
         />
-        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center">
-          <button 
-            onClick={() => onClick(photo)}
-            className="opacity-0 group-hover:opacity-100 bg-white/90 text-stone-900 p-3 rounded-full transform transtone-y-4 group-hover:transtone-y-0 transition-all duration-300 shadow-lg hover:scale-110"
-            title="Preview"
-          >
-            <Maximize2 className="w-5 h-5" />
-          </button>
+        {/* Hover overlay - desktop only */}
+        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors duration-300 hidden sm:flex items-center justify-center pointer-events-none">
+          <div className="opacity-0 group-hover:opacity-100 flex flex-col items-center gap-1 transition-all duration-300 transform translate-y-4 group-hover:translate-y-0">
+            <div className="bg-white/90 text-stone-900 p-3 rounded-full shadow-lg">
+              <Maximize2 className="w-5 h-5" />
+            </div>
+            <span className="text-white text-xs font-semibold drop-shadow">View</span>
+          </div>
+        </div>
+        {/* Mobile tap indicator - always visible on small screens */}
+        <div className="absolute bottom-2 right-2 sm:hidden bg-black/40 backdrop-blur-sm rounded-full p-1.5">
+          <Maximize2 className="w-3.5 h-3.5 text-white" />
         </div>
       </div>
       
