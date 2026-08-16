@@ -22,9 +22,9 @@ const Hero = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="text-4xl font-extrabold tracking-tight sm:text-6xl lg:text-7xl mb-6 text-amber-500 drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]"
+          className="text-4xl font-extrabold tracking-tight sm:text-6xl lg:text-7xl mb-6 text-amber-500 drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]" style={{ fontFamily: "'Cinzel Decorative', serif" }}
         >
-          Your Memories <br /><br />
+          KALHARA <br /><br />
 
         </motion.h1>
 
