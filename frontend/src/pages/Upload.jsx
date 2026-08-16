@@ -8,16 +8,25 @@ const Upload = () => {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0 }}
-      className="pb-12"
+      className="pb-12 max-w-3xl mx-auto"
     >
-      <div className="text-center mb-10 mt-6">
-        <h1 className="text-3xl font-bold text-stone-900 sm:text-4xl">Upload to Gallery</h1>
-        <p className="mt-3 text-lg text-stone-600">Select photos to securely upload to your Google Drive.</p>
+      {/* Clean Minimal Header */}
+      <div className="pt-2 pb-6 text-center">
+        <h1 className="text-2xl sm:text-3xl font-bold text-white font-heading mb-1">
+          Upload Photos
+        </h1>
+        <p className="text-xs sm:text-sm text-stone-400">
+          Upload memories directly to the Kalhara 2K26 album
+        </p>
       </div>
-      
+
+      {/* Main Upload Dropzone */}
       <UploadZone />
     </motion.div>
   );
 };
 
 export default Upload;
+
+
+

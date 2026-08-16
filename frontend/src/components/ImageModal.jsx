@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Download, ChevronLeft, ChevronRight } from 'lucide-react';
+import { X, Download, ChevronLeft, ChevronRight, Calendar, Sparkles } from 'lucide-react';
 
 const ImageModal = ({ photo, onClose, onNext, onPrev, hasNext, hasPrev }) => {
   const touchStartX = useRef(null);
@@ -22,7 +22,7 @@ const ImageModal = ({ photo, onClose, onNext, onPrev, hasNext, hasPrev }) => {
   const handleTouchEnd = (e) => {
     if (touchStartX.current === null) return;
     const diff = touchStartX.current - e.changedTouches[0].clientX;
-    if (Math.abs(diff) > 50) {
+    if (Math.abs(diff) > 40) {
       if (diff > 0 && hasNext) onNext();
       if (diff < 0 && hasPrev) onPrev();
     }
@@ -37,77 +37,99 @@ const ImageModal = ({ photo, onClose, onNext, onPrev, hasNext, hasPrev }) => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-sm p-2 sm:p-8"
+        className="fixed inset-0 z-[100] flex flex-col items-center justify-between bg-black/95 backdrop-blur-xl p-3 sm:p-6 select-none"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
         onClick={onClose}
       >
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-white/70 hover:text-white bg-black/50 hover:bg-black/80 rounded-full p-2.5 transition-all z-10"
+        {/* Top Header Bar */}
+        <div 
+          className="w-full max-w-6xl flex items-center justify-between z-20 pb-2"
+          onClick={(e) => e.stopPropagation()}
         >
-          <X className="w-6 h-6" />
-        </button>
+          <div className="flex items-center space-x-2 text-white/80">
+            <Sparkles className="w-4 h-4 text-amber-400" />
+            <span className="font-semibold text-xs sm:text-sm text-white font-heading truncate max-w-[180px] sm:max-w-md">
+              {photo.name}
+            </span>
+          </div>
 
-        <div className="relative w-full h-full flex items-center justify-center max-w-6xl mx-auto">
+          <div className="flex items-center space-x-2">
+            <a
+              href={photo.publicUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              download={photo.name}
+              className="flex items-center space-x-1.5 bg-amber-500 hover:bg-amber-600 text-white px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full font-bold text-xs sm:text-sm shadow-md transition-all active:scale-95"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>Download</span>
+            </a>
+
+            <button
+              onClick={onClose}
+              className="text-white/80 hover:text-white bg-white/10 hover:bg-white/20 rounded-full p-2 sm:p-2.5 transition-all"
+              title="Close modal (Esc)"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+
+        {/* Center Viewer Area */}
+        <div className="relative w-full flex-grow flex items-center justify-center max-w-6xl mx-auto overflow-hidden">
           {hasPrev && (
             <motion.button
-              whileHover={{ scale: 1.1, x: -2 }}
-              whileTap={{ scale: 0.95 }}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
               onClick={(e) => { e.stopPropagation(); onPrev(); }}
-              className="absolute left-1 sm:left-4 z-10 p-3 sm:p-3 rounded-full bg-black/50 hover:bg-amber-500/80 text-white transition-all -translate-y-1/2 top-1/2 backdrop-blur-sm border border-white/10"
+              className="absolute left-1 sm:left-4 z-20 p-3 sm:p-4 rounded-full bg-stone-900/80 hover:bg-amber-500 text-white transition-all -translate-y-1/2 top-1/2 backdrop-blur-md border border-white/10 shadow-xl"
+              title="Previous (Left arrow)"
             >
-              <ChevronLeft className="w-7 h-7" />
+              <ChevronLeft className="w-6 h-6 sm:w-7 sm:h-7" />
             </motion.button>
           )}
 
           <motion.div
             key={photo.id}
-            initial={{ opacity: 0, scale: 0.95 }}
+            initial={{ opacity: 0, scale: 0.96 }}
             animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="relative flex flex-col items-center justify-center max-h-full max-w-full px-10 sm:px-16"
+            exit={{ opacity: 0, scale: 0.96 }}
+            transition={{ type: "spring", damping: 28, stiffness: 320 }}
+            className="relative flex flex-col items-center justify-center max-h-full max-w-full px-2 sm:px-14"
             onClick={(e) => e.stopPropagation()}
           >
             <img
               src={photo.publicUrl}
               alt={photo.name}
-              className="max-h-[75vh] max-w-full object-contain rounded-lg shadow-2xl"
+              className="max-h-[70vh] sm:max-h-[75vh] max-w-full object-contain rounded-2xl shadow-2xl ring-1 ring-white/10"
             />
-
-            <div className="mt-4 flex flex-col sm:flex-row items-center justify-between w-full max-w-2xl px-2 gap-3">
-              <div className="text-white text-center sm:text-left">
-                <p className="font-semibold text-base truncate max-w-[200px] sm:max-w-[400px]">{photo.name}</p>
-                <p className="text-white/60 text-sm">{new Date(photo.createdTime).toLocaleDateString()}</p>
-              </div>
-              <a
-                href={photo.publicUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                download={photo.name}
-                className="flex items-center space-x-2 bg-amber-600 hover:bg-amber-500 text-white px-5 py-2.5 rounded-full font-medium transition-all hover:scale-105 text-sm whitespace-nowrap"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <Download className="w-4 h-4" />
-                <span>Download</span>
-              </a>
-            </div>
-
-            {/* Mobile swipe hint */}
-            <p className="sm:hidden text-white/30 text-xs mt-3">← Swipe to navigate →</p>
           </motion.div>
 
           {hasNext && (
             <motion.button
-              whileHover={{ scale: 1.1, x: 2 }}
-              whileTap={{ scale: 0.95 }}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
               onClick={(e) => { e.stopPropagation(); onNext(); }}
-              className="absolute right-1 sm:right-4 z-10 p-3 sm:p-3 rounded-full bg-black/50 hover:bg-amber-500/80 text-white transition-all -translate-y-1/2 top-1/2 backdrop-blur-sm border border-white/10"
+              className="absolute right-1 sm:right-4 z-20 p-3 sm:p-4 rounded-full bg-stone-900/80 hover:bg-amber-500 text-white transition-all -translate-y-1/2 top-1/2 backdrop-blur-md border border-white/10 shadow-xl"
+              title="Next (Right arrow)"
             >
-              <ChevronRight className="w-7 h-7" />
+              <ChevronRight className="w-6 h-6 sm:w-7 sm:h-7" />
             </motion.button>
           )}
+        </div>
+
+        {/* Bottom Details Bar */}
+        <div 
+          className="w-full max-w-2xl flex items-center justify-between text-xs sm:text-sm text-stone-400 pt-2 px-2"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="flex items-center space-x-1.5">
+            <Calendar className="w-3.5 h-3.5 text-amber-500" />
+            <span>{new Date(photo.createdTime).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}</span>
+          </div>
+
+          <p className="sm:hidden text-stone-500 text-[11px]">← Swipe to browse →</p>
         </div>
       </motion.div>
     </AnimatePresence>
@@ -115,4 +137,5 @@ const ImageModal = ({ photo, onClose, onNext, onPrev, hasNext, hasPrev }) => {
 };
 
 export default ImageModal;
+
 
