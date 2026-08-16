@@ -14,7 +14,7 @@ const Hero = () => {
         playsInline
         className="absolute inset-0 w-full h-full object-cover opacity-30 mix-blend-luminosity pointer-events-none"
       >
-        <source src="public/hero-2.mp4" type="video/mp4" />
+        <source src="/hero-2.mp4" type="video/mp4" />
       </video>
 
       <div className="relative z-10 px-6 py-24 sm:py-32 lg:px-8 text-center max-w-4xl mx-auto">
