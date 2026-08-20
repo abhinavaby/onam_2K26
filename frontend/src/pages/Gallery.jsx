@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import PhotoGrid from '../components/PhotoGrid';
 import ImageModal from '../components/ImageModal';
-import { getPhotos, deletePhoto } from '../services/api';
+import { getPhotos, deletePhoto, bulkDeletePhotos } from '../services/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   CheckCircle, 
@@ -25,10 +25,12 @@ const Gallery = () => {
   const [sortBy, setSortBy] = useState('newest'); // 'newest' | 'oldest'
   
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState(null);
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const [selectedPhotoIds, setSelectedPhotoIds] = useState([]);
   const [status, setStatus] = useState({ type: '', message: '' });
 
   // Admin delete modal state
-  const [deleteModal, setDeleteModal] = useState({ open: false, photoId: null, password: '', error: '', deleting: false });
+  const [deleteModal, setDeleteModal] = useState({ open: false, photoIds: [], password: '', error: '', deleting: false });
 
   useEffect(() => {
     fetchPhotos();
@@ -53,7 +55,10 @@ const Gallery = () => {
     let result = [...photos];
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
-      result = result.filter(p => p.name && p.name.toLowerCase().includes(q));
+      result = result.filter(p => 
+        (p.name && p.name.toLowerCase().includes(q)) || 
+        (p.uploaderName && p.uploaderName.toLowerCase().includes(q))
+      );
     }
     result.sort((a, b) => {
       const dateA = new Date(a.createdTime || 0).getTime();
@@ -87,7 +92,11 @@ const Gallery = () => {
   };
 
   const openDeleteModal = (photoId) => {
-    setDeleteModal({ open: true, photoId, password: '', error: '', deleting: false });
+    setDeleteModal({ open: true, photoIds: [photoId], password: '', error: '', deleting: false });
+  };
+
+  const openBulkDeleteModal = () => {
+    setDeleteModal({ open: true, photoIds: selectedPhotoIds, password: '', error: '', deleting: false });
   };
 
   const handleConfirmDelete = async (e) => {
@@ -99,13 +108,17 @@ const Gallery = () => {
 
     try {
       setDeleteModal(prev => ({ ...prev, deleting: true, error: '' }));
-      const res = await deletePhoto(deleteModal.photoId, deleteModal.password);
-      if (res.data.success) {
-        setPhotos(prev => prev.filter(p => p.id !== deleteModal.photoId));
-        setStatus({ type: 'success', message: 'Photo deleted successfully from Google Drive.' });
-        setDeleteModal({ open: false, photoId: null, password: '', error: '', deleting: false });
-        setTimeout(() => setStatus({ type: '', message: '' }), 3500);
+      if (deleteModal.photoIds.length === 1) {
+        await deletePhoto(deleteModal.photoIds[0], deleteModal.password);
+      } else {
+        await bulkDeletePhotos(deleteModal.photoIds, deleteModal.password);
       }
+      setPhotos(prev => prev.filter(p => !deleteModal.photoIds.includes(p.id)));
+      setSelectedPhotoIds([]);
+      setIsSelectionMode(false);
+      setStatus({ type: 'success', message: `${deleteModal.photoIds.length > 1 ? 'Photos' : 'Photo'} deleted successfully.` });
+      setDeleteModal({ open: false, photoIds: [], password: '', error: '', deleting: false });
+      setTimeout(() => setStatus({ type: '', message: '' }), 3500);
     } catch (err) {
       setDeleteModal(prev => ({ 
         ...prev, 
@@ -113,6 +126,14 @@ const Gallery = () => {
         error: err.response?.data?.message || 'Incorrect admin password.' 
       }));
     }
+  };
+
+  const handleToggleSelect = (photoId) => {
+    setSelectedPhotoIds(prev => 
+      prev.includes(photoId) 
+        ? prev.filter(id => id !== photoId) 
+        : [...prev, photoId]
+    );
   };
 
   return (
@@ -133,8 +154,23 @@ const Gallery = () => {
           </span>
         </div>
 
-        {/* Compact Sort */}
-        <div className="flex items-center space-x-1 bg-stone-900/80 p-1 rounded-xl border border-white/10 text-xs">
+        {/* Compact Sort & Select */}
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={() => {
+              setIsSelectionMode(!isSelectionMode);
+              setSelectedPhotoIds([]);
+            }}
+            className={`px-3 py-1.5 rounded-xl font-bold text-xs transition-all border ${
+              isSelectionMode 
+                ? 'bg-amber-500 border-amber-500 text-stone-950 shadow-md' 
+                : 'bg-stone-900/80 border-white/10 text-stone-300 hover:text-white'
+            }`}
+          >
+            {isSelectionMode ? 'Cancel' : 'Select'}
+          </button>
+
+          <div className="flex items-center space-x-1 bg-stone-900/80 p-1 rounded-xl border border-white/10 text-xs">
           <button
             onClick={() => setSortBy('newest')}
             className={`px-2.5 py-1 rounded-lg font-medium transition-all ${
@@ -156,6 +192,7 @@ const Gallery = () => {
             Oldest
           </button>
         </div>
+        </div>
       </div>
 
       {/* Clean Search Input */}
@@ -166,7 +203,7 @@ const Gallery = () => {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search photos..."
+            placeholder="Search by photo title or uploader..."
             className="w-full pl-10 pr-9 py-2 rounded-xl bg-stone-900/80 border border-white/10 focus:border-amber-500 text-sm text-white placeholder:text-stone-500 outline-none transition-all"
           />
           {searchQuery && (
@@ -206,7 +243,35 @@ const Gallery = () => {
         adminMode={true}
         onDelete={openDeleteModal}
         onRetry={fetchPhotos}
+        isSelectionMode={isSelectionMode}
+        selectedPhotoIds={selectedPhotoIds}
+        onToggleSelect={handleToggleSelect}
       />
+
+      {/* Floating Action Bar for Bulk Selection */}
+      <AnimatePresence>
+        {isSelectionMode && selectedPhotoIds.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 50 }}
+            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40"
+          >
+            <div className="bg-stone-900/95 backdrop-blur-md border border-white/15 shadow-2xl rounded-full px-5 py-3 flex items-center space-x-4">
+              <span className="text-white font-bold text-sm">
+                {selectedPhotoIds.length} Selected
+              </span>
+              <button
+                onClick={openBulkDeleteModal}
+                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-full text-xs font-bold transition-all shadow-md flex items-center space-x-1.5"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span>Delete</span>
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Lightbox / Modal */}
       {selectedPhotoIndex !== null && (
@@ -231,7 +296,7 @@ const Gallery = () => {
               className="bg-[#131622] rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl border border-white/15 relative text-white"
             >
               <button
-                onClick={() => setDeleteModal({ open: false, photoId: null, password: '', error: '', deleting: false })}
+                onClick={() => setDeleteModal({ open: false, photoIds: [], password: '', error: '', deleting: false })}
                 className="absolute top-5 right-5 p-1.5 rounded-full text-stone-400 hover:text-white bg-white/5 hover:bg-white/10 transition-colors"
               >
                 <X className="w-4 h-4" />
@@ -267,7 +332,7 @@ const Gallery = () => {
                 <div className="flex items-center gap-3 pt-2">
                   <button
                     type="button"
-                    onClick={() => setDeleteModal({ open: false, photoId: null, password: '', error: '', deleting: false })}
+                    onClick={() => setDeleteModal({ open: false, photoIds: [], password: '', error: '', deleting: false })}
                     className="flex-1 px-4 py-2.5 rounded-xl border border-white/10 hover:bg-white/5 text-stone-300 font-semibold text-sm transition-all"
                   >
                     Cancel

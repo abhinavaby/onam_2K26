@@ -11,12 +11,16 @@ import {
   Trash2, 
   ArrowRight,
   Sparkles,
-  ShieldCheck
+  ShieldCheck,
+  User,
+  Edit3
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { uploadPhotos } from '../services/api';
+import { useUser } from '../context/UserContext';
 
 const UploadZone = () => {
+  const { userName, openNameModal, hasUserName } = useUser();
   const [dragActive, setDragActive] = useState(false);
   const [files, setFiles] = useState([]);
   const [uploading, setUploading] = useState(false);
@@ -103,6 +107,15 @@ const UploadZone = () => {
   const handleUpload = async () => {
     if (files.length === 0) return;
     
+    if (!userName || !userName.trim()) {
+      openNameModal();
+      setStatus({ 
+        type: 'error', 
+        message: 'Please enter your name first so we can credit your uploaded photos!' 
+      });
+      return;
+    }
+
     setUploading(true);
     setProgress(15);
     setStatus({ type: '', message: '' });
@@ -111,6 +124,7 @@ const UploadZone = () => {
     files.forEach(file => {
       formData.append('photos', file);
     });
+    formData.append('uploaderName', userName.trim());
 
     try {
       setProgress(45);
@@ -122,7 +136,7 @@ const UploadZone = () => {
         setUploadedCount(count);
         setStatus({ 
           type: 'success', 
-          message: `${count} ${count === 1 ? 'photo' : 'photos'} uploaded securely to Google Drive!` 
+          message: `${count} ${count === 1 ? 'photo' : 'photos'} uploaded securely under "${userName.trim()}"!` 
         });
         files.forEach(file => URL.revokeObjectURL(file.preview));
         setFiles([]);
@@ -143,6 +157,27 @@ const UploadZone = () => {
 
   return (
     <div className="max-w-xl mx-auto">
+      {/* Current Uploader Info & Quick Change */}
+      <div className="mb-4 flex items-center justify-between px-4 py-2.5 rounded-2xl bg-[#131622] border border-amber-500/20 text-xs shadow-md">
+        <div className="flex items-center space-x-2 truncate">
+          <div className="w-6 h-6 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0">
+            <User className="w-3.5 h-3.5" />
+          </div>
+          <span className="text-stone-300 truncate">
+            Uploading as: <strong className="text-white font-bold">{userName || 'Anonymous'}</strong>
+          </span>
+        </div>
+
+        <button
+          type="button"
+          onClick={openNameModal}
+          className="shrink-0 ml-2 px-2.5 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-400 hover:text-amber-300 font-semibold flex items-center space-x-1 transition-all"
+        >
+          <Edit3 className="w-3 h-3" />
+          <span>Change</span>
+        </button>
+      </div>
+
       {/* Upload Box Container */}
       <div 
         className={`relative border border-dashed rounded-3xl p-8 sm:p-12 transition-all duration-200 flex flex-col items-center justify-center text-center overflow-hidden

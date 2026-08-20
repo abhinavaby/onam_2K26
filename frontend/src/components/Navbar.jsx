@@ -1,10 +1,12 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Camera, Image as ImageIcon, UploadCloud, Sparkles } from 'lucide-react';
+import { Camera, Image as ImageIcon, UploadCloud, Sparkles, User, Edit3 } from 'lucide-react';
 import clsx from 'clsx';
+import { useUser } from '../context/UserContext';
 
 const Navbar = () => {
   const location = useLocation();
+  const { userName, openNameModal } = useUser();
 
   const navLinks = [
     { path: '/', label: 'Home', icon: Sparkles },
@@ -24,27 +26,45 @@ const Navbar = () => {
             </span>
           </Link>
           
-          {/* Desktop Navigation Links */}
-          <nav className="hidden md:flex items-center space-x-1 bg-stone-900/90 p-1 rounded-xl border border-white/10">
-            {navLinks.map(({ path, label, icon: Icon }) => {
-              const isActive = location.pathname === path;
-              return (
-                <Link
-                  key={path}
-                  to={path}
-                  className={clsx(
-                    'flex items-center space-x-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all',
-                    isActive 
-                      ? 'bg-amber-500 text-stone-950 font-bold' 
-                      : 'text-stone-300 hover:text-white'
-                  )}
-                >
-                  <Icon className="w-3.5 h-3.5" />
-                  <span>{label}</span>
-                </Link>
-              );
-            })}
-          </nav>
+          {/* Right section: Links + User Name Badge */}
+          <div className="flex items-center space-x-3">
+            {/* Desktop Navigation Links */}
+            <nav className="hidden md:flex items-center space-x-1 bg-stone-900/90 p-1 rounded-xl border border-white/10">
+              {navLinks.map(({ path, label, icon: Icon }) => {
+                const isActive = location.pathname === path;
+                return (
+                  <Link
+                    key={path}
+                    to={path}
+                    className={clsx(
+                      'flex items-center space-x-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all',
+                      isActive 
+                        ? 'bg-amber-500 text-stone-950 font-bold' 
+                        : 'text-stone-300 hover:text-white'
+                    )}
+                  >
+                    <Icon className="w-3.5 h-3.5" />
+                    <span>{label}</span>
+                  </Link>
+                );
+              })}
+            </nav>
+
+            {/* User Profile Badge (Clickable to change name) */}
+            <button
+              onClick={openNameModal}
+              title="Click to change your name"
+              className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 hover:text-amber-200 border border-amber-500/30 text-xs font-semibold shadow-xs hover:border-amber-400/50 transition-all active:scale-95 cursor-pointer group"
+            >
+              <div className="w-5 h-5 rounded-lg bg-amber-500/20 group-hover:bg-amber-500 text-amber-400 group-hover:text-stone-950 flex items-center justify-center transition-colors">
+                <User className="w-3 h-3" />
+              </div>
+              <span className="max-w-[100px] sm:max-w-[140px] truncate font-medium">
+                {userName || 'Enter Name'}
+              </span>
+              <Edit3 className="w-3 h-3 text-amber-400/70 group-hover:text-amber-300" />
+            </button>
+          </div>
         </div>
       </header>
 

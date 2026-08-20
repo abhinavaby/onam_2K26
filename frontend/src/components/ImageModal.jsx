@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Download, ChevronLeft, ChevronRight, Calendar, Sparkles } from 'lucide-react';
+import { X, Download, ChevronLeft, ChevronRight, Calendar, Sparkles, User } from 'lucide-react';
 
 const ImageModal = ({ photo, onClose, onNext, onPrev, hasNext, hasPrev }) => {
   const touchStartX = useRef(null);
@@ -47,11 +47,19 @@ const ImageModal = ({ photo, onClose, onNext, onPrev, hasNext, hasPrev }) => {
           className="w-full max-w-6xl flex items-center justify-between z-20 pb-2"
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="flex items-center space-x-2 text-white/80">
-            <Sparkles className="w-4 h-4 text-amber-400" />
-            <span className="font-semibold text-xs sm:text-sm text-white font-heading truncate max-w-[180px] sm:max-w-md">
-              {photo.name}
-            </span>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-3 gap-0.5">
+            <div className="flex items-center space-x-1.5 text-white/90">
+              <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
+              <span className="font-semibold text-xs sm:text-sm text-white font-heading truncate max-w-[170px] sm:max-w-xs">
+                {photo.name}
+              </span>
+            </div>
+            {photo.uploaderName && (
+              <div className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-[11px] text-amber-300 font-medium w-fit">
+                <User className="w-3 h-3 text-amber-400" />
+                <span>By {photo.uploaderName}</span>
+              </div>
+            )}
           </div>
 
           <div className="flex items-center space-x-2">
@@ -60,7 +68,7 @@ const ImageModal = ({ photo, onClose, onNext, onPrev, hasNext, hasPrev }) => {
               target="_blank"
               rel="noopener noreferrer"
               download={photo.name}
-              className="flex items-center space-x-1.5 bg-amber-500 hover:bg-amber-600 text-white px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full font-bold text-xs sm:text-sm shadow-md transition-all active:scale-95"
+              className="flex items-center space-x-1.5 bg-amber-500 hover:bg-amber-600 text-stone-950 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full font-bold text-xs sm:text-sm shadow-md transition-all active:scale-95"
             >
               <Download className="w-3.5 h-3.5" />
               <span>Download</span>
@@ -124,9 +132,20 @@ const ImageModal = ({ photo, onClose, onNext, onPrev, hasNext, hasPrev }) => {
           className="w-full max-w-2xl flex items-center justify-between text-xs sm:text-sm text-stone-400 pt-2 px-2"
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="flex items-center space-x-1.5">
-            <Calendar className="w-3.5 h-3.5 text-amber-500" />
-            <span>{new Date(photo.createdTime).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}</span>
+          <div className="flex items-center space-x-3 text-xs">
+            <div className="flex items-center space-x-1.5">
+              <Calendar className="w-3.5 h-3.5 text-amber-500" />
+              <span>{new Date(photo.createdTime).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}</span>
+            </div>
+            {photo.uploaderName && (
+              <>
+                <span>•</span>
+                <div className="flex items-center space-x-1 text-amber-400">
+                  <User className="w-3.5 h-3.5" />
+                  <span>{photo.uploaderName}</span>
+                </div>
+              </>
+            )}
           </div>
 
           <p className="sm:hidden text-stone-500 text-[11px]">← Swipe to browse →</p>

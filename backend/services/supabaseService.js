@@ -8,7 +8,7 @@ const supabase = createClient(
 
 const BUCKET_NAME = process.env.SUPABASE_BUCKET_NAME;
 
-const uploadFile = async (fileObject) => {
+const uploadFile = async (fileObject, uploaderName = 'Anonymous') => {
   try {
     // Generate a unique filename
     const fileExtension = fileObject.originalname.split('.').pop();
@@ -33,25 +33,40 @@ const uploadFile = async (fileObject) => {
     const publicUrl = urlData.publicUrl;
 
     // 3. Insert metadata into Postgres Database 'photos' table
-    const { error: dbError } = await supabase
+    let { error: dbError } = await supabase
       .from('photos')
       .insert([
         {
           file_name: fileName,
           original_name: fileObject.originalname,
           public_url: publicUrl,
+          uploader_name: uploaderName,
         }
       ]);
 
+    // Fallback if uploader_name column does not exist in schema yet
+    if (dbError && dbError.message && (dbError.message.includes('column') || dbError.code === 'PGRST204' || dbError.code === '42703')) {
+      console.warn("Retrying photo insert without uploader_name column:", dbError.message);
+      const fallback = await supabase
+        .from('photos')
+        .insert([
+          {
+            file_name: fileName,
+            original_name: fileObject.originalname,
+            public_url: publicUrl,
+          }
+        ]);
+      dbError = fallback.error;
+    }
+
     if (dbError) {
       console.warn("File uploaded to storage but failed to insert into DB:", dbError);
-      // Depending on requirements, you might want to rollback the storage upload here
-      // throw dbError;
     }
 
     return {
       id: fileName, 
       name: fileObject.originalname,
+      uploaderName: uploaderName,
       path: storageData.path,
       publicUrl: publicUrl
     };
@@ -79,6 +94,7 @@ const listFiles = async () => {
     const filesWithUrls = data.map((row) => ({
       id: row.file_name, // using file_name as ID for deletion
       name: row.original_name,
+      uploaderName: row.uploader_name || row.uploaderName || null,
       mimeType: 'image/jpeg', // default since we aren't storing mimetype in DB yet
       createdTime: row.created_at,
       publicUrl: row.public_url,
@@ -119,8 +135,39 @@ const deleteFile = async (fileName) => {
   }
 };
 
+const deleteFiles = async (fileNames) => {
+  try {
+    if (!fileNames || fileNames.length === 0) return true;
+
+    // 1. Delete from Database
+    const { error: dbError } = await supabase
+      .from('photos')
+      .delete()
+      .in('file_name', fileNames);
+
+    if (dbError) {
+      console.warn("Error deleting from DB in bulk:", dbError);
+    }
+
+    // 2. Delete from Storage
+    const { error: storageError } = await supabase.storage
+      .from(BUCKET_NAME)
+      .remove(fileNames);
+
+    if (storageError) {
+      throw storageError;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error bulk deleting files from Supabase:', error);
+    throw error;
+  }
+};
+
 module.exports = {
   uploadFile,
   listFiles,
   deleteFile,
+  deleteFiles,
 };

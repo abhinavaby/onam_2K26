@@ -12,5 +12,6 @@ router.post('/upload', upload.array('photos', 10), photoController.uploadPhotos)
 
 // Admin Route (Protected)
 router.delete('/:fileId', adminAuth, photoController.deletePhoto);
+router.post('/bulk-delete', adminAuth, photoController.deletePhotos);
 
 module.exports = router;

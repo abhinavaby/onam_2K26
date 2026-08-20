@@ -6,9 +6,11 @@ const uploadPhotos = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'No files uploaded' });
     }
 
+    const uploaderName = (req.body.uploaderName || req.body.uploader_name || 'Anonymous').trim();
+
     const uploadedFiles = [];
     for (const file of req.files) {
-      const result = await supabaseService.uploadFile(file);
+      const result = await supabaseService.uploadFile(file, uploaderName);
       uploadedFiles.push(result);
     }
 
@@ -47,8 +49,25 @@ const deletePhoto = async (req, res, next) => {
   }
 };
 
+const deletePhotos = async (req, res, next) => {
+  try {
+    const { fileIds } = req.body;
+    if (!fileIds || !Array.isArray(fileIds) || fileIds.length === 0) {
+      return res.status(400).json({ success: false, message: 'No file IDs provided' });
+    }
+    await supabaseService.deleteFiles(fileIds);
+    res.status(200).json({
+      success: true,
+      message: 'Photos deleted successfully',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   uploadPhotos,
   getPhotos,
   deletePhoto,
+  deletePhotos,
 };

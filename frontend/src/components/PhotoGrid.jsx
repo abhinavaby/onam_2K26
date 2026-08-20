@@ -4,7 +4,7 @@ import PhotoCard from './PhotoCard';
 import LoadingSkeleton from './LoadingSkeleton';
 import { Image as ImageIcon, UploadCloud, Sparkles, RefreshCw } from 'lucide-react';
 
-const PhotoGrid = ({ photos, loading, error, onPhotoClick, adminMode, onDelete, onRetry }) => {
+const PhotoGrid = ({ photos, loading, error, onPhotoClick, adminMode, onDelete, onRetry, isSelectionMode, selectedPhotoIds, onToggleSelect }) => {
   if (loading) {
     return <LoadingSkeleton count={8} />;
   }
@@ -68,6 +68,9 @@ const PhotoGrid = ({ photos, loading, error, onPhotoClick, adminMode, onDelete, 
           onClick={onPhotoClick}
           adminMode={adminMode}
           onDelete={onDelete}
+          isSelectionMode={isSelectionMode}
+          isSelected={selectedPhotoIds && selectedPhotoIds.includes(photo.id)}
+          onToggleSelect={onToggleSelect}
         />
       ))}
     </div>

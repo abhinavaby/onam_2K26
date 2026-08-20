@@ -26,4 +26,12 @@ export const deletePhoto = (fileId, adminPassword) => {
   });
 };
 
+export const bulkDeletePhotos = (fileIds, adminPassword) => {
+  return api.post('/photos/bulk-delete', { fileIds }, {
+    headers: {
+      Authorization: `Bearer ${adminPassword}`,
+    },
+  });
+};
+
 export default api;
