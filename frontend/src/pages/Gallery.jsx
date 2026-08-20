@@ -255,7 +255,7 @@ const Gallery = () => {
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 50 }}
-            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40"
+            className="fixed bottom-24 sm:bottom-12 left-1/2 -translate-x-1/2 z-40"
           >
             <div className="bg-stone-900/95 backdrop-blur-md border border-white/15 shadow-2xl rounded-full px-5 py-3 flex items-center space-x-4">
               <span className="text-white font-bold text-sm">
@@ -282,6 +282,7 @@ const Gallery = () => {
           onPrev={handlePrev}
           hasNext={selectedPhotoIndex < filteredPhotos.length - 1}
           hasPrev={selectedPhotoIndex > 0}
+          onDelete={openDeleteModal}
         />
       )}
 
